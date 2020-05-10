@@ -2,7 +2,7 @@
 ''' '''
 
 
-from tensorflow.keras.models import load_model
+from tensorflow.python.keras.models import load_model
 
 import random
 

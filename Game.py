@@ -1,22 +1,23 @@
 import os
-import random
 import sys   # to exit program
 import pygame
 from pygame.locals import *
-import pyautogui
 
 from tensorflow.python.keras.models import load_model
 
 import numpy as np
 import cv2
 
-from tensorflow import ConfigProto, Session
+from Player import Player
+from Pipe import Pipe
 
-config = ConfigProto()
+#from tensorflow import ConfigProto, Session
 
-config.gpu_options.allow_growth = True
+#config = ConfigProto()
 
-session = Session(config=config)
+#config.gpu_options.allow_growth = True
+
+#session = Session(config=config)
 
 # Global Variable for the game
 FPS = 32
@@ -70,6 +71,7 @@ def welcomeScreen():
      basex = 0
      while True:
          for event in pygame.event.get():
+
              # quit if x is pressed or hold esc
              if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                  pygame.quit()
@@ -93,37 +95,26 @@ def mainGame():
     image = IMGS[0]
     ANIMATION_TIME = 5
     img_count = 0
-    img = IMGS[0]
-    tilt = 0
 
-    playerx = int(SCREENWIDTH/5)
-    playery = int(SCREENHEIGHT/2)
+    player = Player(int(SCREENWIDTH/5), int(SCREENHEIGHT/2), -9, 10, -8, 0.3, BIRD_IMGS, -8, False)
     basex = 0
 
     # create 2 random pipes
-    newPipe1 = getRandomPipe()
-    newPipe2 = getRandomPipe()
+    newPipe1 = Pipe(-4, GAME_SPRITES, SCREENHEIGHT)
+    newPipe1r = newPipe1.getRandomPipe()
+    newPipe2 = Pipe(-4, GAME_SPRITES, SCREENHEIGHT)
+    newPipe2r = newPipe2.getRandomPipe()
 
     # list of upper pipes
     upperPipes = [
-        {'x': SCREENWIDTH + 200, 'y': newPipe1[0]['y']},
-        {'x': SCREENWIDTH + 200 + 650, 'y': newPipe2[0]['y']},
+        {'x': SCREENWIDTH + 200, 'y': newPipe1r[0]['y']},
+        {'x': SCREENWIDTH + 200 + 650, 'y': newPipe2r[0]['y']},
     ]
     # list of lower pipes
     lowerPipes = [
-        {'x': SCREENWIDTH + 200, 'y': newPipe1[1]['y']},
-        {'x': SCREENWIDTH + 200 + 650, 'y': newPipe2[1]['y']},
+        {'x': SCREENWIDTH + 200, 'y': newPipe1r[1]['y']},
+        {'x': SCREENWIDTH + 200 + 650, 'y': newPipe2r[1]['y']},
     ]
-
-    pipeVelX = -4   # pipe vel
-
-    playerVelY = -9
-    playerMaxVelY = 10
-    playerMinVelY = -8
-    playerAccY = 0.3
-
-    playerFlapAccv = -8 #velocity while flapping
-    playerFlapped = False
 
     model = load_model('./training/models/model.7900.h5')
 
@@ -140,7 +131,7 @@ def mainGame():
 
         img_count += 1
 
-        if playerVelY<0:
+        if player.velocityY<0:
             if img_count < ANIMATION_TIME:
                 image = IMGS[0]
             elif img_count < ANIMATION_TIME*2:
@@ -157,9 +148,9 @@ def mainGame():
             img_count = 0
 
         if inference(model, frame):
-            if playery > 0:
-                playerVelY = playerFlapAccv
-                playerFlapped = True
+            if player.positionY > 0:
+                player.velocityY = player.flappedAccVel
+                player.flapped = True
                 image = IMGS[2]
                 GAME_SOUNDS['wing'].play()
                 print('Squatting')
@@ -171,11 +162,11 @@ def mainGame():
                 pygame.quit()
                 sys.exit()
 
-        if isCollide(playerx, playery, upperPipes, lowerPipes):
+        if isCollide(player.positionX, player.positionY, upperPipes, lowerPipes):
             return
 
         # score check
-        playerMidPos = playerx + GAME_SPRITES['player'].get_width()/2
+        playerMidPos = player.positionX + GAME_SPRITES['player'].get_width()/2
         for pipe in upperPipes:
             pipeMidPos = pipe['x'] + GAME_SPRITES['pipe'][0].get_width()/2
             if pipeMidPos <= playerMidPos < pipeMidPos +4:
@@ -183,22 +174,22 @@ def mainGame():
                 print("Your score is " + str(score))
                 GAME_SOUNDS['point'].play()
 
-        if playerVelY < playerMaxVelY and not playerFlapped:
-            playerVelY += playerAccY
+        if player.velocityY < player.maxVelocityY and not player.flapped:
+            player.velocityY += player.accY
 
-        if playerFlapped:
-            playerFlapped = False
+        if player.flapped:
+            player.flapped = False
         playerHeight = GAME_SPRITES['player'].get_height()
-        playery = playery + min(playerVelY, GROUNDY - playery - playerHeight)
+        player.positionY = player.positionY + min(player.velocityY, GROUNDY - player.positionY - playerHeight)
 
         # move pipes to left
         for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
-            upperPipe['x'] += pipeVelX
-            lowerPipe['x'] += pipeVelX
+            upperPipe['x'] += newPipe1.velocityX
+            lowerPipe['x'] += newPipe1.velocityX
 
         # add new pipe when the first pipe about to cross leftmost part of screen
         if 0 < upperPipes[0]['x'] < 5:
-            newpipe = getRandomPipe()
+            newpipe = Pipe(-4, GAME_SPRITES, SCREENHEIGHT).getRandomPipe().getRandomPipe()
             upperPipes.append(newpipe[0])
             lowerPipes.append(newpipe[1])
 
@@ -207,13 +198,6 @@ def mainGame():
             upperPipes.pop(0)
             lowerPipes.pop(0)
 
-        # If bird is falling down, no flapping
-        if tilt <= -80:
-            img = IMGS[1]
-            img_count = ANIMATION_TIME * 2
-        #rotated_image = pygame.transform.rotate(img, tilt)
-        #image = rotated_image.get_rect(center=img.get_rect(topleft=(playerx, playery)).center)
-
         # blit sprites
         SCREEN.blit(GAME_SPRITES['background'], (0, 0))
         for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
@@ -221,7 +205,7 @@ def mainGame():
             SCREEN.blit(GAME_SPRITES['pipe'][1], (lowerPipe['x'], lowerPipe['y']))
 
         SCREEN.blit(GAME_SPRITES['base'], (basex, GROUNDY))
-        SCREEN.blit(image, (playerx, playery))
+        SCREEN.blit(image, (player.positionX, player.positionY))
         myDigits = [int(x) for x in list(str(score))]
         width = 0
         for digit in myDigits:
@@ -234,7 +218,7 @@ def mainGame():
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
-    capture.release()
+    webcam.release()
     cv2.destroyAllWindows()
 
 
@@ -254,20 +238,6 @@ def isCollide(playerx, playery, upperPipes, lowerPipes):
             GAME_SOUNDS['hit'].play()
             return True
     return False
-
-
-def getRandomPipe():
-    pipeHeight = GAME_SPRITES['pipe'][0].get_height()
-    offset = SCREENHEIGHT / 3
-    y2 = offset + random.randrange(0, int(SCREENHEIGHT - GAME_SPRITES['base'].get_height() - 1.2 * offset))
-    pipeX = SCREENWIDTH + 10
-    y1 = pipeHeight - y2 + offset
-    pipe = [
-        {'x': pipeX, 'y': -y1},  # upper Pipe
-        {'x': pipeX, 'y': y2}  # lower Pipe
-    ]
-    return pipe
-
 
 
 
