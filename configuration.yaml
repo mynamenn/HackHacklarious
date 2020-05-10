@@ -1,0 +1,30 @@
+settings:
+  fps: 32
+  screen:
+    height: 720
+    width: 1280
+player:
+  velocity:
+    minimum: 0.0
+    maximum: 0.0
+pipes:
+  velocity: 0.0
+webcam:
+  display: True
+model:
+  confidence_threshold: 0.5
+  standardization:
+    mu: 91.14755214376875
+    sigma: 63.70613171447146
+paths:
+  sprites:
+    player: './gallery/sprites/bird.png'
+    background: './gallery/sprites/background.png'
+    pipe: './gallery/sprites/pipe.png'
+    player: './gallery/sprites/bird.png'
+  audio:
+    die: './gallery/audio/die.wav'
+    hit: './gallery/audio/hit.wav'
+    point: './gallery/audio/point.wav'
+    swoosh: './gallery/audio/swoosh.wav'
+    wing: './gallery/audio/wing.wav'
