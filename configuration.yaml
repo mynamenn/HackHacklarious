@@ -9,6 +9,8 @@ player:
     maximum: 0.0
 pipes:
   velocity: 0.0
+ground:
+  y: 720
 webcam:
   display: True
 model:
@@ -17,11 +19,14 @@ model:
     mu: 91.14755214376875
     sigma: 63.70613171447146
 paths:
+  model: './training/models/model.7900.h5'
   sprites:
     player: './gallery/sprites/bird.png'
     background: './gallery/sprites/background.png'
     pipe: './gallery/sprites/pipe.png'
     player: './gallery/sprites/bird.png'
+    message: './gallery/sprites/message.png'
+    base: './gallery/sprites/base.png'
   audio:
     die: './gallery/audio/die.wav'
     hit: './gallery/audio/hit.wav'
