@@ -5,8 +5,11 @@ import pygame
 from pygame.locals import *
 import cv2
 import pyautogui
+from training.inference import inference
+from tensorflow.python.keras.models import load_model
 
-# Global Variable for the game.
+
+# Global Variable for the game
 FPS = 32
 SCREENWIDTH = 1280
 SCREENHEIGHT = 720
@@ -91,10 +94,12 @@ def mainGame():
     capture = cv2.VideoCapture(0)
     while capture.isOpened():
         while True:
-            ret, frame = capture.read()
+            proceed, frame = capture.read()
             cv2.imshow("U", frame)
-            cv2.imwrite('image.jpg', frame)
-            #prediction = MLModel('image.jpg')
+            # cv2.imwrite('image.jpg', frame)
+
+            if not proceed:
+                break
             img_count += 1
             if playerVelY<0:
                 if img_count < ANIMATION_TIME:
@@ -112,8 +117,9 @@ def mainGame():
                 image = IMGS[0]
                 img_count = 0
 
-            # if prediction:
-            #     pyautogui.press('space')
+            model = load_model('Game2.py./models/model.*.h5')
+            if inference(model, image):
+                pyautogui.press('space')
 
             for event in pygame.event.get():
                 if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -123,7 +129,6 @@ def mainGame():
                     if playery > 0:
                         playerVelY = playerFlapAccv
                         playerFlapped = True
-                        tick_count = 0
                         image = IMGS[2]
                         GAME_SOUNDS['wing'].play()
 
