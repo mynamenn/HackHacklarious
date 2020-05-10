@@ -1,0 +1,49 @@
+hyperparameters:
+  augmentations:
+    brightness:
+      enabled: true
+      max: 1.1
+      min: 0.9
+    debug:
+      display: false
+    enabled: true
+    horizontal_flip: true
+    horizontal_shift:
+      enabled: true
+      percent: 0.2
+    percent: 0.2
+    rotation:
+      enabled: true
+      percent: 20.0
+    vertical_flip:
+      enabled: false
+    vertical_shift:
+      enabled: true
+    zoom:
+      enabled: true
+      percent: 0.2
+  batch_size: 16
+  dropout:
+    rate: 0.5
+  epochs: 100
+  input:
+    dimensions:
+    - 128
+    - 128
+  normalization:
+    enabled: false
+    max: 255.0
+    min: 0.0
+  optimizer:
+    learning_rate: 5.0e-05
+    name: Adam
+  output:
+    activation: sigmoid
+    classes: 1
+  standardization:
+    enabled: true
+    mu: 91.14755214376875
+    sigma: 63.70613171447146
+paths:
+  training_directory: ./data/training/
+  validation_directory: ./data/validation/
