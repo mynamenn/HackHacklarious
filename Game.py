@@ -6,7 +6,7 @@ from pygame.locals import *
 import cv2
 import pyautogui
 
-# Global Variable for the game
+# Global Variable for the game.
 FPS = 32
 SCREENWIDTH = 1280
 SCREENHEIGHT = 720
