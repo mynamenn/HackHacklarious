@@ -266,7 +266,7 @@ def initialize_sprites():
     GAME_SPRITES['player'] = pygame.image.load(cg.paths.sprites.player).convert_alpha()
 
 
-def intialize_sound_effects():
+def initialize_sound_effects():
 
     GAME_SOUNDS['die'] = pygame.mixer.Sound(cg.paths.audio.die)
     GAME_SOUNDS['hit'] = pygame.mixer.Sound(cg.paths.audio.hit)
