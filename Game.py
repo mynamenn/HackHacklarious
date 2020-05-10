@@ -3,8 +3,10 @@ import random
 import sys   # to exit program
 import pygame
 from pygame.locals import *
+import cv2
+import pyautogui
 
-# Global Variable for the game.
+# Global Variable for the game
 FPS = 32
 SCREENWIDTH = 1280
 SCREENHEIGHT = 720
@@ -52,12 +54,9 @@ def mainGame():
 
     IMGS = BIRD_IMGS
     image = IMGS[0]
-    MAX_ROTATION = 25
-    ROT_VEL = 20
     ANIMATION_TIME = 5
     img_count = 0
     img = IMGS[0]
-    tick_count = 0
     tilt = 0
 
     playerx = int(SCREENWIDTH/5)
@@ -89,98 +88,111 @@ def mainGame():
     playerFlapAccv = -8 #velocity while flapping
     playerFlapped = False
 
-    while True:
-        img_count += 1
-        if playerVelY<0:
-            if img_count < ANIMATION_TIME:
-                image = IMGS[0]
-            elif img_count < ANIMATION_TIME*2:
-                image = IMGS[1]
-            elif img_count < ANIMATION_TIME*3:
-                image = IMGS[2]
-            elif img_count < ANIMATION_TIME*4:
-                image = IMGS[1]
-            elif img_count < ANIMATION_TIME*4 + 1:
+    capture = cv2.VideoCapture(0)
+    while capture.isOpened():
+        while True:
+            ret, frame = capture.read()
+            cv2.imshow("U", frame)
+            cv2.imwrite('image.jpg', frame)
+            #prediction = MLModel('image.jpg')
+            img_count += 1
+            if playerVelY<0:
+                if img_count < ANIMATION_TIME:
+                    image = IMGS[0]
+                elif img_count < ANIMATION_TIME*2:
+                    image = IMGS[1]
+                elif img_count < ANIMATION_TIME*3:
+                    image = IMGS[2]
+                elif img_count < ANIMATION_TIME*4:
+                    image = IMGS[1]
+                elif img_count < ANIMATION_TIME*4 + 1:
+                    image = IMGS[0]
+                    img_count = 0
+            else:
                 image = IMGS[0]
                 img_count = 0
-        else:
-            image = IMGS[0]
-            img_count = 0
 
-        for event in pygame.event.get():
-            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.quit()
-                sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
-                if playery > 0:
-                    playerVelY = playerFlapAccv
-                    playerFlapped = True
-                    tick_count = 0
-                    image = IMGS[2]
-                    GAME_SOUNDS['wing'].play()
+            # if prediction:
+            #     pyautogui.press('space')
 
-        if isCollide(playerx, playery, upperPipes, lowerPipes):
-            return
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if playery > 0:
+                        playerVelY = playerFlapAccv
+                        playerFlapped = True
+                        tick_count = 0
+                        image = IMGS[2]
+                        GAME_SOUNDS['wing'].play()
 
-        # score check
-        playerMidPos = playerx + GAME_SPRITES['player'].get_width()/2
-        for pipe in upperPipes:
-            pipeMidPos = pipe['x'] + GAME_SPRITES['pipe'][0].get_width()/2
-            if pipeMidPos <= playerMidPos < pipeMidPos +4:
-                score += 1
-                print("Your score is " + str(score))
-                GAME_SOUNDS['point'].play()
 
-        if playerVelY < playerMaxVelY and not playerFlapped:
-            playerVelY += playerAccY
+            if isCollide(playerx, playery, upperPipes, lowerPipes):
+                return
 
-        if playerFlapped:
-            playerFlapped = False
-        playerHeight = GAME_SPRITES['player'].get_height()
-        playery = playery + min(playerVelY, GROUNDY - playery - playerHeight)
+            # score check
+            playerMidPos = playerx + GAME_SPRITES['player'].get_width()/2
+            for pipe in upperPipes:
+                pipeMidPos = pipe['x'] + GAME_SPRITES['pipe'][0].get_width()/2
+                if pipeMidPos <= playerMidPos < pipeMidPos +4:
+                    score += 1
+                    print("Your score is " + str(score))
+                    GAME_SOUNDS['point'].play()
 
-        # move pipes to left
-        for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
-            upperPipe['x'] += pipeVelX
-            lowerPipe['x'] += pipeVelX
+            if playerVelY < playerMaxVelY and not playerFlapped:
+                playerVelY += playerAccY
 
-        # add new pipe when the first pipe about to cross leftmost part of screen
-        if 0 < upperPipes[0]['x'] < 5:
-            newpipe = getRandomPipe()
-            upperPipes.append(newpipe[0])
-            lowerPipes.append(newpipe[1])
+            if playerFlapped:
+                playerFlapped = False
+            playerHeight = GAME_SPRITES['player'].get_height()
+            playery = playery + min(playerVelY, GROUNDY - playery - playerHeight)
 
-        # remove pipe out of screen
-        if upperPipes[0]['x'] < -GAME_SPRITES['pipe'][0].get_width():
-            upperPipes.pop(0)
-            lowerPipes.pop(0)
+            # move pipes to left
+            for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
+                upperPipe['x'] += pipeVelX
+                lowerPipe['x'] += pipeVelX
 
-        # If bird is falling down, no flapping
-        if tilt <= -80:
-            img = IMGS[1]
-            img_count = ANIMATION_TIME * 2
-        #rotated_image = pygame.transform.rotate(img, tilt)
-        #image = rotated_image.get_rect(center=img.get_rect(topleft=(playerx, playery)).center)
+            # add new pipe when the first pipe about to cross leftmost part of screen
+            if 0 < upperPipes[0]['x'] < 5:
+                newpipe = getRandomPipe()
+                upperPipes.append(newpipe[0])
+                lowerPipes.append(newpipe[1])
 
-        # blit sprites
-        SCREEN.blit(GAME_SPRITES['background'], (0, 0))
-        for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
-            SCREEN.blit(GAME_SPRITES['pipe'][0], (upperPipe['x'], upperPipe['y']))
-            SCREEN.blit(GAME_SPRITES['pipe'][1], (lowerPipe['x'], lowerPipe['y']))
+            # remove pipe out of screen
+            if upperPipes[0]['x'] < -GAME_SPRITES['pipe'][0].get_width():
+                upperPipes.pop(0)
+                lowerPipes.pop(0)
 
-        SCREEN.blit(GAME_SPRITES['base'], (basex, GROUNDY))
-        SCREEN.blit(image, (playerx, playery))
-        myDigits = [int(x) for x in list(str(score))]
-        width = 0
-        for digit in myDigits:
-            width += GAME_SPRITES['numbers'][digit].get_width()
-        Xoffset = (SCREENWIDTH - width)/2
+            # If bird is falling down, no flapping
+            if tilt <= -80:
+                img = IMGS[1]
+                img_count = ANIMATION_TIME * 2
+            #rotated_image = pygame.transform.rotate(img, tilt)
+            #image = rotated_image.get_rect(center=img.get_rect(topleft=(playerx, playery)).center)
 
-        for digit in myDigits:
-            SCREEN.blit(GAME_SPRITES['numbers'][digit], (Xoffset, SCREENHEIGHT*0.12))
-            Xoffset += GAME_SPRITES['numbers'][digit].get_width()
-        pygame.display.update()
-        FPSCLOCK.tick(FPS)
+            # blit sprites
+            SCREEN.blit(GAME_SPRITES['background'], (0, 0))
+            for upperPipe, lowerPipe in zip(upperPipes, lowerPipes):
+                SCREEN.blit(GAME_SPRITES['pipe'][0], (upperPipe['x'], upperPipe['y']))
+                SCREEN.blit(GAME_SPRITES['pipe'][1], (lowerPipe['x'], lowerPipe['y']))
+
+            SCREEN.blit(GAME_SPRITES['base'], (basex, GROUNDY))
+            SCREEN.blit(image, (playerx, playery))
+            myDigits = [int(x) for x in list(str(score))]
+            width = 0
+            for digit in myDigits:
+                width += GAME_SPRITES['numbers'][digit].get_width()
+            Xoffset = (SCREENWIDTH - width)/2
+
+            for digit in myDigits:
+                SCREEN.blit(GAME_SPRITES['numbers'][digit], (Xoffset, SCREENHEIGHT*0.12))
+                Xoffset += GAME_SPRITES['numbers'][digit].get_width()
+            pygame.display.update()
+            FPSCLOCK.tick(FPS)
+
+        capture.release()
+        cv2.destroyAllWindows()
 
 
 def isCollide(playerx, playery, upperPipes, lowerPipes):
@@ -248,6 +260,7 @@ if __name__ == '__main__':
 
     GAME_SPRITES['background'] = pygame.image.load(BACKGROUND).convert()
     GAME_SPRITES['player'] = pygame.image.load(PLAYER).convert_alpha()
+
 
     while True:
         welcomeScreen()
