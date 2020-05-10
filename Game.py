@@ -181,7 +181,6 @@ def mainGame():
             pipeMidPos = pipe['x'] + GAME_SPRITES['pipe'][0].get_width()/2
             if pipeMidPos <= playerMidPos < pipeMidPos +4:
                 score += 1
-                print("Your score is " + str(score))
                 GAME_SOUNDS['point'].play()
 
         if playerVelY < playerMaxVelY and not playerFlapped:
@@ -280,7 +279,7 @@ def getRandomPipe():
 if __name__ == '__main__':
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
-    pygame.display.set_caption('Squatty Bird')
+    pygame.display.set_caption('Squatty Birds')
     GAME_SPRITES['numbers'] = (
         pygame.image.load('gallery/sprites/0.png').convert_alpha(),
         pygame.image.load('gallery/sprites/1.png').convert_alpha(),
