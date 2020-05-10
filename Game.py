@@ -136,8 +136,6 @@ def mainGame():
         if not proceed:
             break
 
-        cv2.imshow('', frame)
-
         img_count += 1
 
         if playerVelY<0:
@@ -162,9 +160,12 @@ def mainGame():
                 playerFlapped = True
                 image = IMGS[2]
                 GAME_SOUNDS['wing'].play()
-                print('Squatting')
-            else:
-                print('Standing')
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = cv2.resize(frame, (128, 128))
+        frame = cv2.transpose(frame)
+        frame = cv2.flip(frame, flipCode=0)
+        frame = pygame.surfarray.make_surface(frame)
 
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -222,15 +223,22 @@ def mainGame():
 
         SCREEN.blit(GAME_SPRITES['base'], (basex, GROUNDY))
         SCREEN.blit(image, (playerx, playery))
+
+        SCREEN.blit(frame, (SCREENWIDTH - 136, 8))
+
         myDigits = [int(x) for x in list(str(score))]
+
         width = 0
+
         for digit in myDigits:
             width += GAME_SPRITES['numbers'][digit].get_width()
+
         Xoffset = (SCREENWIDTH - width)/2
 
         for digit in myDigits:
             SCREEN.blit(GAME_SPRITES['numbers'][digit], (Xoffset, SCREENHEIGHT*0.12))
             Xoffset += GAME_SPRITES['numbers'][digit].get_width()
+
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -269,10 +277,7 @@ def getRandomPipe():
     return pipe
 
 
-
-
 if __name__ == '__main__':
-    # Point where game starts
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     pygame.display.set_caption('Have Fun!')
@@ -288,11 +293,11 @@ if __name__ == '__main__':
         pygame.image.load('gallery/sprites/8.png').convert_alpha(),
         pygame.image.load('gallery/sprites/9.png').convert_alpha(),
     )
+
     GAME_SPRITES['message'] = pygame.image.load('gallery/sprites/message.png').convert_alpha()
     GAME_SPRITES['base'] = pygame.image.load('gallery/sprites/base.png').convert_alpha()
     GAME_SPRITES['pipe'] = (pygame.transform.rotate(pygame.image.load(PIPE).convert_alpha(), 180),
-                            pygame.image.load(PIPE).convert_alpha()
-                            )
+                            pygame.image.load(PIPE).convert_alpha())
 
     # Game sounds
     GAME_SOUNDS['die'] = pygame.mixer.Sound('gallery/audio/die.wav')
@@ -303,7 +308,6 @@ if __name__ == '__main__':
 
     GAME_SPRITES['background'] = pygame.image.load(BACKGROUND).convert()
     GAME_SPRITES['player'] = pygame.image.load(PLAYER).convert_alpha()
-
 
     while True:
         welcomeScreen()
