@@ -100,9 +100,9 @@ def mainGame():
     basex = 0
 
     # create 2 random pipes
-    newPipe1 = Pipe(-4, GAME_SPRITES, cg.settings.screen.height)
+    newPipe1 = Pipe(-4, GAME_SPRITES, cg.settings.screen.height, cg.settings.screen.width)
     newPipe1r = newPipe1.getRandomPipe()
-    newPipe2 = Pipe(-4, GAME_SPRITES, cg.settings.screen.height)
+    newPipe2 = Pipe(-4, GAME_SPRITES, cg.settings.screen.height, cg.settings.screen.width)
     newPipe2r = newPipe2.getRandomPipe()
 
     # list of upper pipes
@@ -190,7 +190,7 @@ def mainGame():
 
         # add new pipe when the first pipe about to cross leftmost part of screen
         if 0 < upperPipes[0]['x'] < 5:
-            newpipe = Pipe(-4, GAME_SPRITES, cg.settings.screen.height).getRandomPipe()
+            newpipe = Pipe(-4, GAME_SPRITES, cg.settings.screen.height, cg.settings.screen.width).getRandomPipe()
             upperPipes.append(newpipe[0])
             lowerPipes.append(newpipe[1])
 
