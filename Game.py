@@ -11,13 +11,13 @@ import cv2
 from Player import Player
 from Pipe import Pipe
 
-#from tensorflow import ConfigProto, Session
+from tensorflow import ConfigProto, Session
 
-#config = ConfigProto()
+config = ConfigProto()
 
-#config.gpu_options.allow_growth = True
+config.gpu_options.allow_growth = True
 
-#session = Session(config=config)
+session = Session(config=config)
 
 # Global Variable for the game
 FPS = 32
@@ -189,7 +189,7 @@ def mainGame():
 
         # add new pipe when the first pipe about to cross leftmost part of screen
         if 0 < upperPipes[0]['x'] < 5:
-            newpipe = Pipe(-4, GAME_SPRITES, SCREENHEIGHT).getRandomPipe().getRandomPipe()
+            newpipe = Pipe(-4, GAME_SPRITES, SCREENHEIGHT).getRandomPipe()
             upperPipes.append(newpipe[0])
             lowerPipes.append(newpipe[1])
 
