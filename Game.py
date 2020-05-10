@@ -3,11 +3,20 @@ import random
 import sys   # to exit program
 import pygame
 from pygame.locals import *
-import cv2
 import pyautogui
-from training.inference import inference
+
 from tensorflow.python.keras.models import load_model
 
+import numpy as np
+import cv2
+
+from tensorflow import ConfigProto, Session
+
+config = ConfigProto()
+
+config.gpu_options.allow_growth = True
+
+session = Session(config=config)
 
 # Global Variable for the game
 FPS = 32
@@ -23,6 +32,31 @@ PIPE = 'gallery/sprites/pipe.png'
 BIRD_IMGS = [pygame.transform.scale2x(pygame.image.load(os.path.join('img', 'bird1.png'))),
              pygame.transform.scale2x(pygame.image.load(os.path.join('img', 'bird2.png'))),
              pygame.transform.scale2x(pygame.image.load(os.path.join('img', 'bird3.png')))]
+
+
+def inference(model, image):
+
+    image = image.copy()
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    image = cv2.resize(image, (128, 128))
+
+    image = image.reshape(128, 128, 1)
+
+    image = image.astype(np.float32)
+
+    image -= 91.14755214376875
+    image /= 63.70613171447146
+
+    image = np.expand_dims(image, axis=0)
+
+    prediction = model.predict(image)
+
+    prediction = float(np.squeeze(prediction, axis=0))
+
+    return False if prediction > 0.5 else True
+
 
 def welcomeScreen():
      """
@@ -91,18 +125,21 @@ def mainGame():
     playerFlapAccv = -8 #velocity while flapping
     playerFlapped = False
 
-    capture = cv2.VideoCapture(0)
+    model = load_model('./training/models/model.7900.h5')
 
-    while capture.isOpened():
+    webcam = cv2.VideoCapture(0)
 
-        proceed, frame = capture.read()
+    while webcam.isOpened():
 
-        cv2.imshow("U", frame)
-        # cv2.imwrite('image.jpg', frame)
+        proceed, frame = webcam.read()
 
         if not proceed:
             break
+
+        cv2.imshow('', frame)
+
         img_count += 1
+
         if playerVelY<0:
             if img_count < ANIMATION_TIME:
                 image = IMGS[0]
@@ -119,22 +156,20 @@ def mainGame():
             image = IMGS[0]
             img_count = 0
 
-        model = load_model('./training/models/model.7900.h5')
-
         if inference(model, frame):
-            pyautogui.press('space')
+            if playery > 0:
+                playerVelY = playerFlapAccv
+                playerFlapped = True
+                image = IMGS[2]
+                GAME_SOUNDS['wing'].play()
+                print('Squatting')
+            else:
+                print('Standing')
 
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONUP:
-                if playery > 0:
-                    playerVelY = playerFlapAccv
-                    playerFlapped = True
-                    image = IMGS[2]
-                    GAME_SOUNDS['wing'].play()
-
 
         if isCollide(playerx, playery, upperPipes, lowerPipes):
             return
@@ -199,8 +234,8 @@ def mainGame():
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
-        capture.release()
-        cv2.destroyAllWindows()
+    capture.release()
+    cv2.destroyAllWindows()
 
 
 def isCollide(playerx, playery, upperPipes, lowerPipes):
