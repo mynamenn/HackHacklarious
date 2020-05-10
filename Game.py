@@ -250,28 +250,41 @@ def isCollide(playerx, playery, upperPipes, lowerPipes):
     return False
 
 
-
-if __name__ == '__main__':
-    pygame.init()
-    FPSCLOCK = pygame.time.Clock()
-    pygame.display.set_caption('Squatty Birds')
+def initialize_sprites():
 
     GAME_SPRITES['numbers'] = [pygame.image.load(f'gallery/sprites/{_}.png').convert_alpha() for _ in range(10)]
 
     GAME_SPRITES['message'] = pygame.image.load(cg.paths.sprites.message).convert_alpha()
     GAME_SPRITES['base'] = pygame.image.load(cg.paths.sprites.base).convert_alpha()
-    GAME_SPRITES['pipe'] = (pygame.transform.rotate(pygame.image.load(cg.paths.sprites.pipe).convert_alpha(), 180),
-                            pygame.image.load(cg.paths.sprites.pipe).convert_alpha())
 
-    # Game sounds
+    GAME_SPRITES['pipe'] = (
+        pygame.transform.rotate(
+            pygame.image.load(cg.paths.sprites.pipe).convert_alpha(), 180),
+            pygame.image.load(cg.paths.sprites.pipe).convert_alpha())
+
+    GAME_SPRITES['background'] = pygame.image.load(cg.paths.sprites.background).convert()
+    GAME_SPRITES['player'] = pygame.image.load(cg.paths.sprites.player).convert_alpha()
+
+
+def intialize_sound_effects():
+
     GAME_SOUNDS['die'] = pygame.mixer.Sound(cg.paths.audio.die)
     GAME_SOUNDS['hit'] = pygame.mixer.Sound(cg.paths.audio.hit)
     GAME_SOUNDS['point'] = pygame.mixer.Sound(cg.paths.audio.point)
     GAME_SOUNDS['swoosh'] = pygame.mixer.Sound(cg.paths.audio.swoosh)
     GAME_SOUNDS['wing'] = pygame.mixer.Sound(cg.paths.audio.wing)
 
-    GAME_SPRITES['background'] = pygame.image.load(cg.paths.sprites.background).convert()
-    GAME_SPRITES['player'] = pygame.image.load(cg.paths.sprites.player).convert_alpha()
+
+if __name__ == '__main__':
+
+    pygame.init()
+
+    FPSCLOCK = pygame.time.Clock()
+
+    pygame.display.set_caption('Squatty Birds')
+
+    initialize_sprites()
+    initialize_sound_effects()
 
     while True:
         welcomeScreen()
